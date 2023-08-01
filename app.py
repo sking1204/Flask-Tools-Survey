@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, flash, jsonify
+from flask import Flask, request, render_template, redirect, flash
 from surveys import satisfaction_survey 
 
 from flask_debugtoolbar import DebugToolbarExtension
@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 app = Flask(__name__)
 
 app.config['SECRET_KEY']="catsarecool1234"
-# app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 debug = DebugToolbarExtension(app)
 
 RESPONSES =[]
@@ -16,34 +16,27 @@ def show_survey_title():
     """Shows user survey titles available to seleft"""
     return render_template("home.html", satisfaction_survey=satisfaction_survey)
 
-@app.route("/begin", methods=["POST"])
-def start_survey():    
-    return redirect("/questions/0")
 
-
-@app.route('/questions/0')
-def show_questions():
-    """Shows users survey questions to select"""
+# @app.route('/questions/0')
+# def show_questions():
+#     """Shows users survey questions to select"""
     
-    return render_template("questions.html",question=satisfaction_survey.questions[0])
+#     return render_template("questions.html",question=satisfaction_survey.questions[0])
 
-@app.route('/questions/1')
-def show_questions1():
+@app.route('/questions/<int:question_id>')
+def show_questions (question_id):
     """Shows users survey questions to select"""
-    
-    return render_template("questions.html",question=satisfaction_survey.questions[1])
+    if (len(RESPONSES) != question_id):
+        # Trying to access questions out of order.
+        flash("Please answer questions in order.")
+        return redirect(f"/questions/{len(RESPONSES)}")
+    if (len(RESPONSES) == len(satisfaction_survey.questions)):
+        # They've answered all the questions! Thank them.
+        return redirect("/complete")
+    else:
+        return render_template("questions.html",question=satisfaction_survey.questions[question_id])
 
-@app.route('/questions/2')
-def show_questions2():
-    """Shows users survey questions to select"""
-    
-    return render_template("questions.html",question=satisfaction_survey.questions[2])
 
-@app.route('/questions/3')
-def show_questions3():
-    """Shows users survey questions to select"""
-    
-    return render_template("questions.html",question=satisfaction_survey.questions[3])
 
 
 
@@ -59,10 +52,14 @@ def handle_question():
     RESPONSES.append(choice)   
     return redirect(f"/questions/{len(RESPONSES)}")
 
-## ASK MENTOR FOR HELP WITH ADDING LOGIC TO REDIRECT TO thanks.html PAGE AFTER
-##ALL SURVEY QUESTIONS HAVE BEEN ANSWERED
 
-##ALSO, HOW CAN WE GET THE SAME RESULTS WITHOUT HARD CODING EACH QUESTION INDEX
+@app.route("/complete")
+def show_completed():
+    return render_template("thanks.html")
+
+## Review adding methods=["POST"] to the /answer route
+
+
 
 
 
